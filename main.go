@@ -36,7 +36,7 @@ const (
 	LT = "<"
 	GT = ">"
 
-	EQ = "=="
+	EQ     = "=="
 	NOT_EQ = "!="
 
 	// Delimeters
@@ -88,62 +88,63 @@ func (l *Lexer) NextToken() Token {
 
 	l.skipWhitespace()
 
-	switch l.ch {
-	case '=':
-		if l.peekChar() == '=' {
-			l.readChar()
-			tok = Token{Type: EQ, Literal: "=="}
-		} else {
-			tok = newToken(ASSIGN, l.ch)
-		}
-	case '+':
-		tok = newToken(PLUS, l.ch)
-	case '-':
-		tok = newToken(MINUS, l.ch)
-	case '!':
-		if l.peekChar() == '=' {
-			l.readChar()
-			tok = Token{Type: NOT_EQ, Literal: "!="}
-		} else {
-			tok = newToken(BANG, l.ch)
-		}
-	case '/':
-		tok = newToken(SLASH, l.ch)
-	case '*':
-		tok = newToken(ASTERISK, l.ch)
-	case '<':
-		tok = newToken(LT, l.ch)
-	case '>':
-		tok = newToken(GT, l.ch)
-	case ';':
-		tok = newToken(SEMICOLON, l.ch)
-	case ',':
-		tok = newToken(COMMA, l.ch)
-	case '(':
-		tok = newToken(LPAREN, l.ch)
-	case ')':
-		tok = newToken(RPAREN, l.ch)
-	case '{':
-		tok = newToken(LBRACE, l.ch)
-	case '}':
-		tok = newToken(RBRACE, l.ch)
-	case 0:
-		tok.Literal = ""
-		tok.Type = EOF
+	switch ch := l.ch; {
+	case isLetter(ch):
+		tok.Literal = l.readIdentifier()
+		tok.Type = LookupIdent(tok.Literal)
+		return tok
+	case isDigit(ch):
+		tok.Type = INT
+		tok.Literal = l.readNumber()
 	default:
-		if isLetter(l.ch) {
-			tok.Literal = l.readIdentifier()
-			tok.Type = LookupIdent(tok.Literal)
-			return tok
-		} else if isDigit(l.ch) {
-			tok.Type = INT
-			tok.Literal = l.readNumber()
-		} else {
-			tok = newToken(ILLEGAL, l.ch)
+		l.readChar()
+		switch ch {
+		case '=':
+			if l.ch == '=' {
+				l.readChar()
+				tok = Token{Type: EQ, Literal: "=="}
+			} else {
+				tok = newToken(ASSIGN, ch)
+			}
+		case '+':
+			tok = newToken(PLUS, ch)
+		case '-':
+			tok = newToken(MINUS, ch)
+		case '!':
+			if l.ch == '=' {
+				l.readChar()
+				tok = Token{Type: NOT_EQ, Literal: "!="}
+			} else {
+				tok = newToken(BANG, ch)
+			}
+		case '/':
+			tok = newToken(SLASH, ch)
+		case '*':
+			tok = newToken(ASTERISK, ch)
+		case '<':
+			tok = newToken(LT, ch)
+		case '>':
+			tok = newToken(GT, ch)
+		case ';':
+			tok = newToken(SEMICOLON, ch)
+		case ',':
+			tok = newToken(COMMA, ch)
+		case '(':
+			tok = newToken(LPAREN, ch)
+		case ')':
+			tok = newToken(RPAREN, ch)
+		case '{':
+			tok = newToken(LBRACE, ch)
+		case '}':
+			tok = newToken(RBRACE, ch)
+		case 0:
+			tok.Literal = ""
+			tok.Type = EOF
+		default:
+			tok = newToken(ILLEGAL, ch)
 		}
 	}
 
-	l.readChar()
 	return tok
 }
 
